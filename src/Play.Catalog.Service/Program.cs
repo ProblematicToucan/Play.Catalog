@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Mvc;
+using Play.Catalog.Service;
+using Play.Catalog.Service.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,28 +20,41 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// Get all items
+app.MapGet("/api/item", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return DataItems.items;
+}).WithName("GetAllItem").Produces<IEnumerable<ItemDto>>(200);
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/api/item/{id:Guid}", (Guid id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateTime.Now.AddDays(index),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var result = DataItems.items.FirstOrDefault(item => item.id == id);
+    return result != null ? Results.Ok(result) :  Results.NotFound();
+}).WithName("GetItem").Produces<ItemDto>(200).Produces(404);
+
+app.MapPost("/api/item", ([FromBody] CreateItemDto itemDto) =>
+{
+    var newItem = new ItemDto(Guid.NewGuid(), itemDto.name, itemDto.desc, itemDto.price, DateTimeOffset.UtcNow);
+    DataItems.items.Add(newItem);
+    return Results.Created($"/api/item/{newItem.id}", newItem);
+}).WithName("CreateItem").Accepts<CreateItemDto>("application/json").Produces<ItemDto>(201).Produces(400);
+
+app.MapPut("/api/item/{id:Guid}", (Guid id, [FromBody] UpdateItemDto itemDto) =>
+{
+    var indexOf = DataItems.items.FindIndex(item => item.id == id);
+    if (indexOf < 0) return Results.BadRequest();
+    var existingItem = DataItems.items[indexOf];
+    var dummy = new ItemDto(existingItem.id, itemDto.name, itemDto.desc, itemDto.price, existingItem.createdTime);
+    DataItems.items[indexOf] = dummy;
+    return Results.StatusCode(201);
+}).WithName("UpdateItem").Accepts<UpdateItemDto>("application/json").Produces<ItemDto>(201).Produces(400);
+
+app.MapDelete("/api/item", (Guid id) =>
+{
+    var indexOf = DataItems.items.FindIndex(item => item.id == id);
+    if (indexOf < 0) return Results.BadRequest();
+    DataItems.items.RemoveAt(indexOf);
+    return Results.StatusCode(201);
+}).WithName("DeleteItem").Produces(201).Produces(400);
 
 app.Run();
-
-record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
