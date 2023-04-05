@@ -2,7 +2,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(x => x.SuppressMapClientErrors = true);
+builder.Services.AddControllers(options => options.SuppressAsyncSuffixInActionNames = false)
+.ConfigureApiBehaviorOptions(options => options.SuppressMapClientErrors = true);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
