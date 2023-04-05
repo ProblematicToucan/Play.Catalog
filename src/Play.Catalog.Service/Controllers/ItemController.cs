@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Play.Catalog.Service.Controllers;
 
-[ApiController, Route("Controller")]
+[ApiController, Route("api/item")]
 public class ItemController : ControllerBase
 {
     private readonly ILogger<ItemController> _logger;
@@ -20,14 +20,14 @@ public class ItemController : ControllerBase
         new ItemDto(Guid.NewGuid(), "Sword", "Deals a small amount of damage", 20, DateTimeOffset.UtcNow)
     };
 
-    [HttpGet("/api/item"), Produces("Application/json")]
+    [HttpGet, Produces("Application/json")]
     [ProducesResponseType(200)]
     public ActionResult<IEnumerable<ItemDto>> GetAllItem()
     {
         return Ok(items);
     }
 
-    [HttpGet("/api/item/{id}"), Produces("Application/json")]
+    [HttpGet("{id}"), Produces("Application/json")]
     [ProducesResponseType(200), ProducesResponseType(404)]
     public ActionResult<ItemDto> GetItemById(Guid id)
     {
@@ -35,7 +35,7 @@ public class ItemController : ControllerBase
         return result != null ? Ok(result) : NotFound();
     }
 
-    [HttpPost("/api/item"), Produces("Application/json")]
+    [HttpPost, Produces("Application/json")]
     [ProducesResponseType(typeof(ItemDto), 201), ProducesResponseType(400)]
     public ActionResult AddItem(CreateItemDto newItem)
     {
@@ -44,7 +44,7 @@ public class ItemController : ControllerBase
         return CreatedAtAction(nameof(GetItemById), new { id = item.id }, item);
     }
 
-    [HttpPut("/api/item/{id}"), Produces("Application/json")]
+    [HttpPut("{id}"), Produces("Application/json")]
     [ProducesResponseType(typeof(ItemDto), 200), ProducesResponseType(400), ProducesResponseType(404)]
     public ActionResult<ItemDto> PutItem(Guid id, UpdateItemDto newItem)
     {
@@ -56,7 +56,7 @@ public class ItemController : ControllerBase
         return Ok(existingItem);
     }
 
-    [HttpDelete("/api/item/{id}"), Produces("Application/json")]
+    [HttpDelete("{id}"), Produces("Application/json")]
     [ProducesResponseType(typeof(ItemDto), 204), ProducesResponseType(404)]
     public ActionResult DeleteItem(Guid id)
     {
